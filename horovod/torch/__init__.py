@@ -205,7 +205,7 @@ class _DistributedOptimizer(torch.optim.Optimizer):
 
 class _DistributedDeltaOptimizer(torch.optim.Optimizer):
     #TODO remove once the Apex is integrated with PyTorch
-    import apex as amp
+    #import apex as amp
     def __init__(self, params, named_parameters, compression,
                  backward_passes_per_step=1, op=Average):
         super(self.__class__, self).__init__(params)
@@ -274,7 +274,7 @@ class _DistributedDeltaOptimizer(torch.optim.Optimizer):
 def DistributedOptimizer(optimizer, named_parameters=None,
                          compression=Compression.none,
                          backward_passes_per_step=1,
-                         op=Average):
+                         op=Average, force_delta=False):
     """
     An optimizer that wraps another torch.optim.Optimizer, using an allreduce to
     combine gradient values before applying gradients to model weights.
@@ -317,7 +317,7 @@ def DistributedOptimizer(optimizer, named_parameters=None,
     # We dynamically create a new class that inherits from the optimizer that was passed in.
     # The goal is to override the `step()` method with an allreduce implementation.
 
-    if op == Adasum:
+    if op == Adasum or force_delta:
         cls = type(optimizer.__class__.__name__, (optimizer.__class__,),
             dict(_DistributedDeltaOptimizer.__dict__))
     else:
