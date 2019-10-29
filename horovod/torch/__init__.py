@@ -387,7 +387,7 @@ class _DistributedAdasumOptimizer(torch.optim.Optimizer):
 def DistributedOptimizer(optimizer, named_parameters=None,
                          compression=Compression.none,
                          backward_passes_per_step=1,
-                         op=Average):
+                         op=Average, force_delta=False):
     """
     An optimizer that wraps another torch.optim.Optimizer, using an allreduce to
     combine gradient values before applying gradients to model weights.
@@ -430,7 +430,7 @@ def DistributedOptimizer(optimizer, named_parameters=None,
     # We dynamically create a new class that inherits from the optimizer that was passed in.
     # The goal is to override the `step()` method with an allreduce implementation.
 
-    if op != Adasum or size() == 1:
+    if not force_delta and (op != Adasum or size() == 1):
         cls = type(optimizer.__class__.__name__, (optimizer.__class__,),
             dict(_DistributedOptimizer.__dict__))
         return cls(optimizer.param_groups, named_parameters, compression, backward_passes_per_step, op)
